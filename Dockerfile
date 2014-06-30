@@ -1,28 +1,18 @@
-# VERSION   0.2
-# DOCKER-VERSION  0.4.0
+FROM  fedora:20
 
-from  ubuntu:12.10
+RUN   yum install npm nodejs redis which gcc-c++ make openssl-devel libicu-devel -y 
+RUN   npm install coffee-script hubot -g
+RUN   hubot --create .
+RUN   npm install --save hubot-hipchat
+RUN   chmod 755 bin/hubot 
 
-run   echo "deb http://archive.ubuntu.com/ubuntu quantal main universe" > /etc/apt/sources.list
-run   apt-get -y update
-run   apt-get -y install wget git redis-server
-run   apt-get -y install build-essential python
-run   apt-get -y install libexpat1-dev libexpat1 libicu-dev
+RUN   yum -y install supervisor
+RUN   mkdir -p /var/log/supervisor
 
-run   wget -O - http://nodejs.org/dist/v0.11.0/node-v0.11.0-linux-x64.tar.gz | tar -C /usr/local/ --strip-components=1 -zxv
-run   npm install coffee-script hubot -g
-run   hubot --create .
-run   npm install --save hubot-hipchat
-run   chmod 755 bin/hubot 
+ADD   hubot-scripts.json hubot-scripts.json
+ADD   ./supervisord.conf /etc/supervisord.d/hubot.ini
 
-run   apt-get -y install supervisor
-run   mkdir -p /var/log/supervisor
+RUN   npm install xml2js underscore underscore.string soupselect htmlparser
+RUN   mkdir /scripts; cd /scripts;curl -O https://raw.githubusercontent.com/github/hubot-scripts/master/src/scripts/tvshow.coffee -O https://raw.githubusercontent.com/github/hubot-scripts/master/src/scripts/update.coffee -O https://raw.githubusercontent.com/github/hubot-scripts/master/src/scripts/reddit-jokes.coffee -O https://raw.githubusercontent.com/github/hubot-scripts/master/src/scripts/jenkins.coffee -O https://raw.githubusercontent.com/github/hubot-scripts/master/src/scripts/wikipedia.coffee -O https://raw.githubusercontent.com/github/hubot-scripts/master/src/scripts/futurama.coffee -O https://raw.githubusercontent.com/github/hubot-scripts/master/src/scripts/beerme.coffee
 
-add   hubot-scripts.json hubot-scripts.json
-add   ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-env   HUBOT_HIPCHAT_JID [asdfID]@chat.hipchat.com
-env   HUBOT_HIPCHAT_PASSWORD [your-password]
-env   HUBOT_AUTH_ADMIN [your name]
-
-cmd   supervisord -n
+CMD   supervisord -n
